@@ -1,22 +1,10 @@
 import streamlit as st
-import mysql.connector
 import pandas as pd
 from mysql.connector import Error
+from conexao_mysql import conectar_mysql
+from Filmes import tela_cadastro_filmes
 
-# Função para conectar ao banco
-def conectar_mysql():
-    try:
-        conexao = mysql.connector.connect(
-            host='187.87.135.21',       # ou o IP/host do servidor
-            user='root',
-            password='Rural@2025',
-            database='Programacoes_Filmes'
-        )
-        if conexao.is_connected():
-            return conexao
-    except Error as e:
-        st.error(f"Erro ao conectar ao MySQL: {e}")
-        return None
+
 
 def buscar_dados(conexao, tabela):
     try:
@@ -32,7 +20,7 @@ def main():
     st.set_page_config(page_title="Programação de Filmes", layout="wide")
     st.markdown("<h1 style='text-align: center; color: #2E8B57;'>Programação de Filmes</h1>", unsafe_allow_html=True)
 
-    menu = ["Início", "Visualizar Banco de Dados"]
+    menu = ["Início", "Visualizar Banco de Dados", "Filmes"]
     escolha = st.sidebar.radio("Navegação", menu)
 
     conexao = conectar_mysql()
@@ -65,6 +53,9 @@ def main():
         except Error as e:
             st.error(f"Erro ao recuperar tabelas: {e}")
 
+    elif escolha == "Filmes":
+        tela_cadastro_filmes()
+        
     cursor.close()
     conexao.close()
 
