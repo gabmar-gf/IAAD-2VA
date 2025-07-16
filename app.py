@@ -3,6 +3,7 @@ import pandas as pd
 from mysql.connector import Error
 from conexao_mysql import conectar_mysql
 from Filmes import tela_cadastro_filmes
+from dashboard_analitico import dashboard_analitico
 
 
 
@@ -20,7 +21,7 @@ def main():
     st.set_page_config(page_title="Programação de Filmes", layout="wide")
     st.markdown("<h1 style='text-align: center; color: #2E8B57;'>Programação de Filmes</h1>", unsafe_allow_html=True)
 
-    menu = ["Início", "Visualizar Banco de Dados", "Filmes"]
+    menu = ["Início", "Visualizar Banco de Dados", "Filmes", "Dashboard Analítico"]
     escolha = st.sidebar.radio("Navegação", menu)
 
     conexao = conectar_mysql()
@@ -55,6 +56,9 @@ def main():
 
     elif escolha == "Filmes":
         tela_cadastro_filmes()
+        
+    elif escolha == "Dashboard Analítico":
+        dashboard_analitico()
         
     cursor.close()
     conexao.close()
