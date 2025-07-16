@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
-from conexao_mysql import conectar_mysql
+from conexao_mysql import Db
 import altair as alt
 
 def dashboard_analitico():
     st.title("📊 Dashboard Analítico de Programações de Filmes")
 
-    conexao = conectar_mysql()
+    conexao = Db.get_connection()
     if not conexao:
         st.warning("Erro ao conectar ao banco.")
         return

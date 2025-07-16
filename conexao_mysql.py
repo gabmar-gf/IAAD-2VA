@@ -1,36 +1,30 @@
-
 import mysql.connector
 from mysql.connector import Error
+import threading
 
-def conectar_mysql():
-    try:
-        conexao = mysql.connector.connect(
+class Db:
+
+    @classmethod
+    def get_connection(cls):
+        print("--> Criando nova conexão com o banco de dados...")
+        return mysql.connector.connect(
             host='187.87.135.21',       
             user='root',
             password='Rural@2025',
             database='Programacoes_Filmes'
         )
-        if conexao.is_connected():
-            return conexao
-    except Error as e:
-        print(f"Erro ao conectar ao MySQL: {e}")
-        return None
 
 class FilmesCRUD:
     def __init__(self):
         try:
-            self.connection = conectar_mysql()
+            self.connection = Db.get_connection()
             # if self.connection.is_connected():
             #     print("Conexão ao MySQL estabelecida com sucesso!")
             # Linhas comentadas para evitar prints desnecessários
         except Error as e:
             print(f"Erro ao conectar ao MySQL: {e}")
     
-    def __del__(self):
-        if hasattr(self, 'connection') and self.connection.is_connected():
-            self.connection.close()
-            # print("Conexão ao MySQL encerrada.")
-            # Linha comentada para evitar prints desnecessários
+
 
     # Operações CRUD para a tabela Canal
     def create_canal(self, num_canal, nome):

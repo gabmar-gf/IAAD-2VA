@@ -1,8 +1,9 @@
 import streamlit as st
 import pandas as pd
 from mysql.connector import Error
-from conexao_mysql import conectar_mysql
+from conexao_mysql import Db
 from Filmes import tela_cadastro_filmes
+from pages.Canal import tela_canal_crud
 from dashboard_analitico import dashboard_analitico
 
 
@@ -21,10 +22,10 @@ def main():
     st.set_page_config(page_title="Programação de Filmes", layout="wide")
     st.markdown("<h1 style='text-align: center; color: #2E8B57;'>Programação de Filmes</h1>", unsafe_allow_html=True)
 
-    menu = ["Início", "Visualizar Banco de Dados", "Filmes", "Dashboard Analítico"]
+    menu = ["Início", "Visualizar Banco de Dados", "Canais", "Filmes", "Dashboard Analítico"]
     escolha = st.sidebar.radio("Navegação", menu)
 
-    conexao = conectar_mysql()
+    conexao = Db.get_connection()
     if not conexao:
         st.stop()
 
@@ -59,6 +60,9 @@ def main():
         
     elif escolha == "Dashboard Analítico":
         dashboard_analitico()
+        
+    elif escolha == "Canais":
+        tela_canal_crud()
         
     cursor.close()
     conexao.close()

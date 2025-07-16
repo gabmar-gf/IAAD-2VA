@@ -1,5 +1,4 @@
 import streamlit as st
-from conexao_mysql import conectar_mysql
 from conexao_mysql import FilmesCRUD
 
 def tela_cadastro_filmes():
