@@ -1,5 +1,6 @@
 import streamlit as st
 from conexao_mysql import conectar_mysql
+from conexao_mysql import FilmesCRUD
 
 def tela_cadastro_filmes():
     st.subheader("Cadastro de Filmes")
@@ -9,33 +10,23 @@ def tela_cadastro_filmes():
     ano = st.text_input("Ano")
     duracao = st.text_input("Duração (minutos)")
 
+    crud = FilmesCRUD()
+
     if st.button("Adicionar Filme"):
         try:
-            conexao = conectar_mysql()
-            cursor = conexao.cursor()
-            sql = '''
-            INSERT INTO Filme(num_filme, nome, ano, duracao)
-            VALUES(%s, %s, %s, %s)
-            '''
-            cursor.execute(sql, (id, nome, ano, duracao))
-            conexao.commit()
+            crud.create_filme(id, nome, ano, duracao)
             st.success("🎉 Filme adicionado com sucesso!")
-            conexao.close()
         except Exception as e:
             st.error(f"Erro ao adicionar filme: {e}")
 
     if st.button("Ver Filmes Cadastrados"):
         try:
-            conexao = conectar_mysql()
-            cursor = conexao.cursor()
-            cursor.execute("SELECT nome FROM Filme")
-            filmes = cursor.fetchall()
+            filmes = crud.read_filmes()
             if filmes:
                 st.markdown("### 🎬 Filmes Cadastrados:")
                 for filme in filmes:
-                    st.write(f"- {filme[0]}")
+                    st.write(f"- {filme[1]}")
             else:
                 st.info("Nenhum filme encontrado.")
-            conexao.close()
         except Exception as e:
             st.error(f"Erro ao buscar filmes: {e}")
