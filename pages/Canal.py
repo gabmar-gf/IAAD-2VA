@@ -37,7 +37,7 @@ def tela_canal_crud():
                                 try:
                                     repository.update(canal['num_canal'], nome_atualizado)
                                     st.success(f"Canal atualizado para '{nome_atualizado}'!")
-                                    st.rerun() 
+                                    st.experimental_rerun() 
                                 except Exception as e:
                                     st.error(f"Erro ao atualizar: {e}")
                 
@@ -46,7 +46,7 @@ def tela_canal_crud():
                         try:
                             repository.delete(canal['num_canal'])
                             st.success(f"Canal '{canal['nome']}' deletado.")
-                            st.rerun()
+                            st.experimental_rerun() 
                         except Exception as e:
                             st.error(f"Erro ao deletar: {e}")
                 

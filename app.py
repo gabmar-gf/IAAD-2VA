@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 from mysql.connector import Error
 from conexao_mysql import Db
-from Filmes import tela_cadastro_filmes
+from pages.Filmes import tela_filme_crud
 from pages.Canal import tela_canal_crud
-from dashboard_analitico import dashboard_analitico
+from pages.dashboard_analitico import dashboard_analitico
 
 
 
@@ -56,7 +56,7 @@ def main():
             st.error(f"Erro ao recuperar tabelas: {e}")
 
     elif escolha == "Filmes":
-        tela_cadastro_filmes()
+        tela_filme_crud()
         
     elif escolha == "Dashboard Analítico":
         dashboard_analitico()
