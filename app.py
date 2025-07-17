@@ -5,6 +5,7 @@ from conexao_mysql import Db
 from pages.Filmes import tela_filme_crud
 from pages.Canal import tela_canal_crud
 from pages.dashboard_analitico import dashboard_analitico
+from pages.Exibicoes import tela_exibicoes_crud
 
 
 
@@ -22,7 +23,7 @@ def main():
     st.set_page_config(page_title="Programação de Filmes", layout="wide")
     st.markdown("<h1 style='text-align: center; color: #2E8B57;'>Programação de Filmes</h1>", unsafe_allow_html=True)
 
-    menu = ["Início", "Visualizar Banco de Dados", "Canais", "Filmes", "Dashboard Analítico"]
+    menu = ["Início", "Visualizar Banco de Dados", "Canais", "Filmes", "Dashboard Analítico","Exibições"]
     escolha = st.sidebar.radio("Navegação", menu)
 
     conexao = Db.get_connection()
@@ -63,6 +64,9 @@ def main():
         
     elif escolha == "Canais":
         tela_canal_crud()
+
+    elif escolha == "Exibições":
+        tela_exibicoes_crud()
         
     cursor.close()
     conexao.close()
