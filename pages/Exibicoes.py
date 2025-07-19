@@ -1,96 +1,107 @@
 import streamlit as st
 import pandas as pd
-from datetime import time
-from conexao_mysql import FilmesCRUD
 from repositories.ExibicoesRepository import ExibicoesRepository
+from repositories.FilmeRepository import FilmeRepository
+from repositories.CanalRepository import CanalRepository
+import datetime
+import math
 
-def tela_exibicoes_crud():
-    st.subheader("Gerenciamento de Exibições")
-    crud = FilmesCRUD()
+def tela_exibicao_crud():
+    st.header("Gerenciamento de Exibições")
 
+    exibicao_repo = ExibicoesRepository()
+    filme_repo = FilmeRepository()
+    canal_repo = CanalRepository()
 
-    filmes = crud.read_filmes()
-    canais = crud.read_canais()
+    try:
+        filmes = filme_repo.find_all()
+        canais = canal_repo.find_all()
 
-    filmes_dict = {f"{f[0]} - {f[1]}": f[0] for f in filmes}  
-    canais_dict = {f"{c[0]} - {c[1]}": c[0] for c in canais}  
-
-    st.markdown("### Cadastrar nova exibição")
-    with st.form("form_exibicao"):
-        filme_escolhido = st.selectbox("Filme", list(filmes_dict.keys()))
-        canal_escolhido = st.selectbox("Canal", list(canais_dict.keys()))
-        data_exibicao = st.date_input("Data da exibição")
-        hora_exibicao = st.time_input("Hora da exibição", value=time(20, 0))
-        cadastrar = st.form_submit_button("Agendar")
-
-        if cadastrar:
-            try:
-                crud.create_exibicao(
-                    num_filme=filmes_dict[filme_escolhido],
-                    num_canal=canais_dict[canal_escolhido],
-                    data_exibicao=data_exibicao,
-                    hora_exibicao=hora_exibicao
-                )
-                st.success("Exibição cadastrada com sucesso!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Erro ao cadastrar exibição: {e}")
-
-    st.markdown("### Exibições cadastradas")
-
-    exibicoes = crud.read_exibicoes()
-    if not exibicoes:
-        st.info("Nenhuma exibição encontrada.")
+        filme_opcoes = {filme['nome']: filme['num_filme'] for filme in filmes}
+        canal_opcoes = {canal['nome']: canal['num_canal'] for canal in canais}
+    except Exception as e:
+        st.error(f"Não foi possível carregar os dados de Filmes e Canais: {e}")
         return
 
-    df = pd.DataFrame(exibicoes, columns=["Filme", "Canal", "Data", "Hora"])
-    st.dataframe(df, use_container_width=True)
+    st.subheader("Agendar Nova Exibição")
+    with st.form(key="add_exibicao_form", clear_on_submit=True):
+        filme_selecionado = st.selectbox("Selecione o Filme", options=list(filme_opcoes.keys()))
+        canal_selecionado = st.selectbox("Selecione o Canal", options=list(canal_opcoes.keys()))
+        data_exibicao = st.date_input("Data da Exibição", value=datetime.date.today())
+        hora_exibicao = st.time_input("Hora da Exibição", value=datetime.time(20, 0))
+        
+        submit_button = st.form_submit_button(label="Agendar Exibição")
 
-    st.markdown("#### Ações")
-
-    import datetime
-    for ex in exibicoes:
-        num_filme, num_canal, data, hora = ex[0], ex[1], ex[2], ex[3]
-        st.write(f"🎬 Filme {num_filme}, Canal {num_canal}, em {data} às {hora}")
-
-        col1, col2 = st.columns([3, 1])
-
-        with col1:
-            with st.expander("Editar"):
-                with st.form(f"editar_{num_filme}_{num_canal}_{data}_{hora}"):
-                    novo_data = st.date_input("Nova data", value=data)
-                    
-                    if isinstance(hora, str):
-                        try:
-                            hora_obj = datetime.datetime.strptime(hora, "%H:%M:%S").time()
-                        except Exception:
-                            hora_obj = datetime.time(20, 0)
-                    elif isinstance(hora, datetime.time):
-                        hora_obj = hora
-                    else:
-                        hora_obj = datetime.time(20, 0)
-                    nova_hora = st.time_input("Nova hora", value=hora_obj)
-                    editar = st.form_submit_button("Salvar alterações")
-
-                    if editar:
-                        try:
-                            crud.update_exibicao(
-                                num_filme, num_canal,
-                                data_original=data,
-                                hora_original=hora,
-                                nova_data=novo_data,
-                                nova_hora=nova_hora
-                            )
-                            st.success("Exibição atualizada!")
-                            st.rerun()
-                        except Exception as e:
-                            st.error(f"Erro ao atualizar: {e}")
-
-        with col2:
-            if st.button("Excluir", key=f"delete_{num_filme}_{num_canal}_{data}_{hora}"):
+        if submit_button:
+            if filme_selecionado and canal_selecionado:
                 try:
-                    crud.delete_exibicao(num_filme, num_canal, data, hora)
-                    st.success("Exibição removida!")
-                    st.rerun()
+                    filme_id = filme_opcoes[filme_selecionado]
+                    canal_id = canal_opcoes[canal_selecionado]
+                    
+                    exibicao_repo.create(filme_id, canal_id, data_exibicao, hora_exibicao)
+                    st.success("Exibição agendada com sucesso!")
+                    st.experimental_rerun()
                 except Exception as e:
-                    st.error(f"Erro ao excluir: {e}")
+                    st.error(f"Falha ao agendar exibição: {e}")
+            else:
+                st.warning("É necessário selecionar um filme e um canal.")
+
+    st.markdown("---")
+
+    st.subheader("Exibições Agendadas")
+    try:
+        exibicoes = exibicao_repo.find_all()
+        if not exibicoes:
+            st.info("Nenhuma exibição encontrada.")
+        else:
+            df = pd.DataFrame(exibicoes)
+            st.dataframe(df[['filme', 'canal', 'data_exibicao', 'hora_exibicao']], use_container_width=True)
+
+            st.markdown("#### Ações")
+            for index, exibicao in df.iterrows():
+                st.write(f"**Exibição:** {exibicao['filme']} no canal {exibicao['canal']}")
+                
+                col_edit, col_delete = st.columns([3, 1])
+
+                with col_edit:
+                    form_key = f"edit_form_{exibicao['num_filme']}_{exibicao['num_canal']}_{exibicao['data_exibicao']}_{exibicao['hora_exibicao']}"
+                    with st.expander("Editar"):
+                        with st.form(key=form_key):
+                            filme_edit_selecionado = st.selectbox("Filme", options=list(filme_opcoes.keys()), index=list(filme_opcoes.keys()).index(exibicao['filme']), key=f"edit_filme_{form_key}")
+                            canal_edit_selecionado = st.selectbox("Canal", options=list(canal_opcoes.keys()), index=list(canal_opcoes.keys()).index(exibicao['canal']), key=f"edit_canal_{form_key}")
+                            
+                            data_atual = exibicao['data_exibicao']
+                            hora_atual_str = exibicao['hora_exibicao']
+                            hora_atual_obj = datetime.datetime.strptime(hora_atual_str, '%H:%M:%S').time()
+
+                            data_edit = st.date_input("Data", value=data_atual, key=f"edit_data_{form_key}")
+                            hora_edit = st.time_input("Hora", value=hora_atual_obj, key=f"edit_hora_{form_key}")
+
+                            if st.form_submit_button("Salvar Alterações"):
+                                try:
+                                    novo_filme_id = filme_opcoes[filme_edit_selecionado]
+                                    novo_canal_id = canal_opcoes[canal_edit_selecionado]
+                                    
+                                    exibicao_repo.update(
+                                        exibicao['num_filme'], exibicao['num_canal'], exibicao['data_exibicao'], exibicao['hora_exibicao'],
+                                        novo_filme_id, novo_canal_id, data_edit, hora_edit
+                                    )
+                                    st.success("Exibição atualizada!")
+                                    st.experimental_rerun()
+                                except Exception as e:
+                                    st.error(f"Erro ao atualizar: {e}")
+                
+                with col_delete:
+                    delete_key = f"delete_{exibicao['num_filme']}_{exibicao['num_canal']}_{exibicao['data_exibicao']}_{exibicao['hora_exibicao']}"
+                    if st.button("Deletar", key=delete_key, type="primary", use_container_width=True):
+                        try:
+                            exibicao_repo.delete(exibicao['num_filme'], exibicao['num_canal'], exibicao['data_exibicao'], exibicao['hora_exibicao'])
+                            st.success("Exibição deletada.")
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.error(f"Erro ao deletar: {e}")
+                
+                st.markdown("---")
+
+    except Exception as e:
+        st.error(f"Não foi possível carregar as exibições: {e}")
