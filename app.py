@@ -6,8 +6,7 @@ from pages.Filmes import tela_filme_crud
 from pages.Canal import tela_canal_crud
 from pages.dashboard_analitico import dashboard_analitico
 from pages.Exibicoes import tela_exibicao_crud
-
-
+from pages.Elenco import tela_elenco_crud
 
 def buscar_dados(conexao, tabela):
     try:
@@ -23,7 +22,7 @@ def main():
     st.set_page_config(page_title="Programação de Filmes", layout="wide")
     st.markdown("<h1 style='text-align: center; color: #2E8B57;'>Programação de Filmes</h1>", unsafe_allow_html=True)
 
-    menu = ["Início", "Visualizar Banco de Dados", "Dashboard Analítico", "Canais", "Filmes","Exibições"]
+    menu = ["Início", "Visualizar Banco de Dados", "Dashboard Analítico", "Canais", "Filmes","Exibições", "Elenco"]
     escolha = st.sidebar.radio("Navegação", menu)
 
     conexao = Db.get_connection()
@@ -67,6 +66,9 @@ def main():
 
     elif escolha == "Exibições":
         tela_exibicao_crud()
+        
+    elif escolha == "Elenco":
+        tela_elenco_crud()
         
     cursor.close()
     conexao.close()
