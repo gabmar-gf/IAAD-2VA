@@ -1,14 +1,16 @@
 import streamlit as st
 import pandas as pd
 from repositories.FilmeRepository import FilmeRepository
-from repositories.ExibicoesRepository import ExibicoesRepository 
+from repositories.ExibicoesRepository import ExibicoesRepository
+from repositories.ElencoRepository import ElencoRepository
 import datetime
 
 def tela_filme_crud():
     st.header("Gerenciamento de Filmes")
 
     filme_repository = FilmeRepository()
-    exibicao_repository = ExibicoesRepository() 
+    exibicao_repository = ExibicoesRepository()
+    elenco_repository = ElencoRepository()
 
     st.subheader("Adicionar Novo Filme")
     with st.form(key="add_filme_form", clear_on_submit=True):
@@ -22,7 +24,7 @@ def tela_filme_crud():
                 try:
                     filme_repository.create(nome, int(ano), int(duracao))
                     st.success(f"Filme '{nome}' adicionado com sucesso!")
-                    st.experimental_rerun() 
+                    st.experimental_rerun()
                 except Exception as e:
                     st.error(f"Falha ao adicionar filme: {e}")
             else:
@@ -50,7 +52,7 @@ def tela_filme_crud():
                             try:
                                 filme_repository.delete(filme['num_filme'])
                                 st.success(f"Filme '{filme['nome']}' deletado.")
-                                st.experimental_rerun() 
+                                st.experimental_rerun()
                             except Exception as e:
                                 st.error(f"Erro ao deletar: {e}")
                     
@@ -68,7 +70,7 @@ def tela_filme_crud():
                                 try:
                                     filme_repository.update(filme['num_filme'], novo_nome, int(novo_ano), int(nova_duracao))
                                     st.success("Filme atualizado!")
-                                    st.experimental_rerun() 
+                                    st.experimental_rerun()
                                 except Exception as e:
                                     st.error(f"Erro ao atualizar: {e}")
                     
@@ -83,7 +85,31 @@ def tela_filme_crud():
                             st.dataframe(df_exibicoes, use_container_width=True)
 
                         st.markdown("###### Elenco")
-                        st.write("A funcionalidade de elenco aparecerá aqui.")
+                        elenco_do_filme = elenco_repository.find_by_filme_id(filme['num_filme'])
+
+                        if not elenco_do_filme:
+                            st.info("Nenhum ator cadastrado para este filme.")
+                        else:
+                            for ator in elenco_do_filme:
+                                col_ator, col_delete_ator = st.columns([4, 1])
+                                with col_ator:
+                                    protagonista_str = "⭐ Protagonista" if ator['protagonista'] else "Coadjuvante"
+                                    st.text(f"{ator['nome_ator']} ({protagonista_str})")
+                                with col_delete_ator:
+                                    if st.button("Remover", key=f"delete_ator_{filme['num_filme']}_{ator['nome_ator']}", type="secondary"):
+                                        elenco_repository.delete(filme['num_filme'], ator['nome_ator'])
+                                        st.experimental_rerun()
+                        
+                        with st.form(key=f"add_ator_form_{filme['num_filme']}", clear_on_submit=True):
+                            st.markdown("Adicionar Ator ao Elenco")
+                            nome_ator = st.text_input("Nome do Ator", key=f"ator_nome_{filme['num_filme']}")
+                            protagonista = st.checkbox("É protagonista?", key=f"ator_protagonista_{filme['num_filme']}")
+                            if st.form_submit_button("Adicionar"):
+                                if nome_ator:
+                                    elenco_repository.create(filme['num_filme'], nome_ator, protagonista)
+                                    st.experimental_rerun()
+                                else:
+                                    st.warning("O nome do ator não pode ser vazio.")
 
     except Exception as e:
         st.error(f"Não foi possível carregar os filmes: {e}")
