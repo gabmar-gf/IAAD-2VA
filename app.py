@@ -1,59 +1,57 @@
 import streamlit as st
 import pandas as pd
-from mysql.connector import Error
-from conexao_mysql import Db
 from pages.Filmes import tela_filme_crud
 from pages.Canal import tela_canal_crud
 from pages.dashboard_analitico import dashboard_analitico
 from pages.Exibicoes import tela_exibicao_crud
 from pages.Elenco import tela_elenco_crud
 
-def buscar_dados(conexao, tabela):
-    try:
-        consulta = f"SELECT * FROM {tabela}"
-        df = pd.read_sql(consulta, con=conexao)
-        return df
-    except Exception as e:
-        st.warning(f"Erro ao buscar dados: {e}")
-        return None
+# Importa todas as classes de repositório
+from repositories.CanalRepository import CanalRepository
+from repositories.FilmeRepository import FilmeRepository
+from repositories.ElencoRepository import ElencoRepository
+from repositories.ExibicoesRepository import ExibicoesRepository
 
 # Interface principal
 def main():
     st.set_page_config(page_title="Programação de Filmes", layout="wide")
     st.markdown("<h1 style='text-align: center; color: #2E8B57;'>Programação de Filmes</h1>", unsafe_allow_html=True)
 
-    menu = ["Início", "Visualizar Banco de Dados", "Dashboard Analítico", "Canais", "Filmes","Exibições", "Elenco"]
+    menu = ["Início", "Visualizar Tabelas", "Dashboard Analítico", "Canais", "Filmes", "Exibições", "Elenco"]
     escolha = st.sidebar.radio("Navegação", menu)
-
-    conexao = Db.get_connection()
-    if not conexao:
-        st.stop()
-
-    cursor = conexao.cursor()
 
     if escolha == "Início":
         st.subheader("Bem-vindo ao sistema de programação de filmes!")
-        st.write("Utilize o menu lateral para visualizar os dados do banco.")
+        st.write("Utilize o menu lateral para navegar entre as funcionalidades.")
 
-    elif escolha == "Visualizar Banco de Dados":
-        st.subheader("Dados do Banco de Dados")
+    elif escolha == "Visualizar Tabelas":
+        st.subheader("Visualizar Dados das Tabelas")
         st.markdown("Selecione uma tabela para visualizar os dados:")
 
-        try:
-            cursor.execute("SHOW TABLES")
-            tabelas = [item[0] for item in cursor.fetchall()]
+        # Mapeia o nome da tabela para a instância do repositório correspondente
+        repositorios = {
+            "Canal": CanalRepository(),
+            "Filme": FilmeRepository(),
+            "Elenco": ElencoRepository(),
+            "Exibicao": ExibicoesRepository()
+        }
 
-            if tabelas:
-                tabela_escolhida = st.selectbox("Tabelas disponíveis", tabelas)
-                df = buscar_dados(conexao, tabela_escolhida)
-                if df is not None:
+        tabela_escolhida = st.selectbox("Tabelas disponíveis", list(repositorios.keys()))
+
+        if tabela_escolhida:
+            try:
+                # Chama o método find_all do repositório selecionado
+                repository = repositorios[tabela_escolhida]
+                dados = repository.find_all()
+                
+                if dados:
+                    df = pd.DataFrame(dados)
                     st.success(f"Mostrando dados da tabela: `{tabela_escolhida}`")
                     st.dataframe(df, use_container_width=True)
-            else:
-                st.warning("Nenhuma tabela encontrada no banco de dados.")
-
-        except Error as e:
-            st.error(f"Erro ao recuperar tabelas: {e}")
+                else:
+                    st.info(f"Nenhum dado encontrado na tabela `{tabela_escolhida}`.")
+            except Exception as e:
+                st.error(f"Erro ao buscar dados da tabela `{tabela_escolhida}`: {e}")
 
     elif escolha == "Filmes":
         tela_filme_crud()
@@ -69,9 +67,6 @@ def main():
         
     elif escolha == "Elenco":
         tela_elenco_crud()
-        
-    cursor.close()
-    conexao.close()
 
 if __name__ == '__main__':
     main()

@@ -47,18 +47,6 @@ class ExibicoesRepository:
         except Error as e:
             print(f"Falha ao buscar exibições: {e}")
             return []
-
-    def get_total_count(self):
-        try:
-            cursor = self.connection.cursor()
-            query = "SELECT COUNT(*) FROM Exibicao"
-            cursor.execute(query)
-            total = cursor.fetchone()[0]
-            cursor.close()
-            return total
-        except Error as e:
-            print(f"Falha ao contar exibições: {e}")
-            return 0
         
     def find_by_filme_id(self, num_filme):
         try:

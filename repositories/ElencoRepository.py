@@ -35,6 +35,26 @@ class ElencoRepository:
             print(f"Falha ao buscar elenco para o filme ID {num_filme}: {e}")
             return []
 
+    def find_all(self):
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            query = """
+                SELECT 
+                    f.nome AS nome_filme, 
+                    e.nome_ator, 
+                    e.protagonista
+                FROM Elenco e
+                JOIN Filme f ON e.num_filme = f.num_filme
+                ORDER BY f.nome, e.protagonista DESC, e.nome_ator ASC
+            """
+            cursor.execute(query)
+            elenco_completo = cursor.fetchall()
+            cursor.close()
+            return elenco_completo
+        except Error as e:
+            print(f"Falha ao buscar todo o elenco: {e}")
+            return []
+
     def delete(self, num_filme, nome_ator):
         try:
             cursor = self.connection.cursor()
