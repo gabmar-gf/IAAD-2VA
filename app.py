@@ -6,13 +6,11 @@ from pages.dashboard_analitico import dashboard_analitico
 from pages.Exibicoes import tela_exibicao_crud
 from pages.Elenco import tela_elenco_crud
 
-# Importa todas as classes de repositório
 from repositories.CanalRepository import CanalRepository
 from repositories.FilmeRepository import FilmeRepository
 from repositories.ElencoRepository import ElencoRepository
 from repositories.ExibicoesRepository import ExibicoesRepository
 
-# Interface principal
 def main():
     st.set_page_config(page_title="Programação de Filmes", layout="wide")
     st.markdown("<h1 style='text-align: center; color: #2E8B57;'>Programação de Filmes</h1>", unsafe_allow_html=True)
@@ -28,7 +26,6 @@ def main():
         st.subheader("Visualizar Dados das Tabelas")
         st.markdown("Selecione uma tabela para visualizar os dados:")
 
-        # Mapeia o nome da tabela para a instância do repositório correspondente
         repositorios = {
             "Canal": CanalRepository(),
             "Filme": FilmeRepository(),
@@ -40,7 +37,6 @@ def main():
 
         if tabela_escolhida:
             try:
-                # Chama o método find_all do repositório selecionado
                 repository = repositorios[tabela_escolhida]
                 dados = repository.find_all()
                 
